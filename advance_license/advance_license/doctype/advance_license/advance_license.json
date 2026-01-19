@@ -42,6 +42,7 @@
    "label": "Detail"
   },
   {
+   "columns": 1,
    "default": "Today",
    "fieldname": "current_license_date",
    "fieldtype": "Date",
@@ -57,9 +58,11 @@
    "options": "Advance Licence"
   },
   {
+   "columns": 1,
    "default": "USD",
    "fieldname": "currency",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Currency",
    "options": "Currency"
   },
@@ -69,9 +72,11 @@
    "label": "Export Exchange Rate"
   },
   {
+   "columns": 1,
    "default": "INR",
    "fieldname": "local_currency",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Local Currency",
    "options": "Currency"
   },
@@ -114,14 +119,18 @@
    "label": "Licence Expiry (Months)"
   },
   {
+   "columns": 1,
    "fieldname": "import_expiry_date",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Import Expiry Date",
    "mandatory_depends_on": "eval:doc.value_import_inr > 0"
   },
   {
+   "columns": 1,
    "fieldname": "export_expiry_date",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Export Expiry Date",
    "mandatory_depends_on": "eval:doc.value_export_inr > 0"
   },
@@ -130,11 +139,12 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "default": "Active",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Active\nClosed"
+   "options": "Active\nHold\nClosed"
   },
   {
    "fieldname": "remark",
@@ -143,8 +153,11 @@
    "max_height": "30px"
   },
   {
+   "columns": 1,
    "fieldname": "application_type",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Application Type",
    "options": "SION\nNon SION-Fresh\nNon SION-Repeat"
   },
@@ -176,6 +189,7 @@
    "options": "Advance License Export"
   },
   {
+   "columns": 1,
    "fieldname": "license_number",
    "fieldtype": "Data",
    "label": "License Number",
@@ -197,7 +211,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-19 06:33:18.373534",
+ "modified": "2026-01-19 06:53:00.669190",
  "modified_by": "Administrator",
  "module": "ADVANCE LICENSE",
  "name": "Advance License",
@@ -220,5 +234,18 @@
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [
+  {
+   "color": "Green",
+   "title": "Active"
+  },
+  {
+   "color": "Yellow",
+   "title": "Hold"
+  },
+  {
+   "color": "Red",
+   "title": "Closed"
+  }
+ ]
 }

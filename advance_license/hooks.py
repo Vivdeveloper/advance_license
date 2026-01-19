@@ -47,6 +47,7 @@ app_license = "mit"
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+doctype_js = {"Purchase Invoice" : "advance_license/public/js/purchase_invoice.js"}
 
 # Svg Icons
 # ------------------
@@ -137,13 +138,12 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Purchase Invoice": {
+		"validate": "advance_license.api.validate_purchase_invoice_license",
+		"before_submit": "advance_license.api.validate_purchase_invoice_license"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
