@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-01-01 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_of_import",
+  "item_name_of_import",
+  "qty_allowed",
+  "uom",
+  "column_break_hbal",
+  "description",
+  "wastage_percent"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "item_of_import",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item of Import",
+   "link_filters": "[[\"Item\",\"is_purchase_item\",\"=\",1]]",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "item_of_import.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty_allowed",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty Allowed",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "wastage_percent",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Wastage %"
+  },
+  {
+   "columns": 2,
+   "fetch_from": "item_of_import.item_name",
+   "fieldname": "item_name_of_import",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name of Import"
+  },
+  {
+   "fieldname": "column_break_hbal",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-01-19 06:35:05.723366",
+ "modified_by": "Administrator",
+ "module": "ADVANCE LICENSE",
+ "name": "Advance License Import",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

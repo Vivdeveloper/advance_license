@@ -1,0 +1,224 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:license_number",
+ "creation": "2024-01-01 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_detail",
+  "license_number",
+  "current_license_date",
+  "currency",
+  "local_currency",
+  "column_break_detail_1",
+  "application_type",
+  "license_type",
+  "remark",
+  "column_break_detail_2",
+  "status",
+  "approval_date",
+  "section_break_enpo",
+  "export_exchange_rate",
+  "value_export_fcy",
+  "value_export_inr",
+  "column_break_yjiz",
+  "import_exchange_rate",
+  "value_import_fcy",
+  "value_import_inr",
+  "column_break_tlvh",
+  "license_expiry_months",
+  "import_expiry_date",
+  "export_expiry_date",
+  "section_break_imports",
+  "import_items",
+  "section_break_exports",
+  "export_items"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_detail",
+   "fieldtype": "Section Break",
+   "label": "Detail"
+  },
+  {
+   "default": "Today",
+   "fieldname": "current_license_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "default": "Advance Licence",
+   "fieldname": "license_type",
+   "fieldtype": "Select",
+   "label": "Lic. Type",
+   "options": "Advance Licence"
+  },
+  {
+   "default": "USD",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "export_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Export Exchange Rate"
+  },
+  {
+   "default": "INR",
+   "fieldname": "local_currency",
+   "fieldtype": "Link",
+   "label": "Local Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "value_export_fcy",
+   "fieldtype": "Currency",
+   "label": "Value of Export (FCY)",
+   "options": "currency"
+  },
+  {
+   "fieldname": "value_export_inr",
+   "fieldtype": "Currency",
+   "label": "Value of Export (Local)",
+   "options": "local_currency"
+  },
+  {
+   "fieldname": "value_import_fcy",
+   "fieldtype": "Currency",
+   "label": "Value of Import (FCY)",
+   "options": "currency"
+  },
+  {
+   "fieldname": "value_import_inr",
+   "fieldtype": "Currency",
+   "label": "Value of Import (Local)",
+   "options": "local_currency"
+  },
+  {
+   "fieldname": "import_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Import Exchange Rate"
+  },
+  {
+   "fieldname": "column_break_detail_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "license_expiry_months",
+   "fieldtype": "Int",
+   "label": "Licence Expiry (Months)"
+  },
+  {
+   "fieldname": "import_expiry_date",
+   "fieldtype": "Date",
+   "label": "Import Expiry Date",
+   "mandatory_depends_on": "eval:doc.value_import_inr > 0"
+  },
+  {
+   "fieldname": "export_expiry_date",
+   "fieldtype": "Date",
+   "label": "Export Expiry Date",
+   "mandatory_depends_on": "eval:doc.value_export_inr > 0"
+  },
+  {
+   "fieldname": "column_break_detail_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nClosed"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Small Text",
+   "label": "Remark",
+   "max_height": "30px"
+  },
+  {
+   "fieldname": "application_type",
+   "fieldtype": "Select",
+   "label": "Application Type",
+   "options": "SION\nNon SION-Fresh\nNon SION-Repeat"
+  },
+  {
+   "fieldname": "approval_date",
+   "fieldtype": "Date",
+   "label": "Approval Date"
+  },
+  {
+   "fieldname": "section_break_imports",
+   "fieldtype": "Section Break",
+   "label": "Item of Import"
+  },
+  {
+   "fieldname": "import_items",
+   "fieldtype": "Table",
+   "label": "Item of Import",
+   "options": "Advance License Import"
+  },
+  {
+   "fieldname": "section_break_exports",
+   "fieldtype": "Section Break",
+   "label": "Item of Export"
+  },
+  {
+   "fieldname": "export_items",
+   "fieldtype": "Table",
+   "label": "Item of Export",
+   "options": "Advance License Export"
+  },
+  {
+   "fieldname": "license_number",
+   "fieldtype": "Data",
+   "label": "License Number",
+   "unique": 1
+  },
+  {
+   "fieldname": "section_break_enpo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_yjiz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_tlvh",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-19 06:33:18.373534",
+ "modified_by": "Administrator",
+ "module": "ADVANCE LICENSE",
+ "name": "Advance License",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

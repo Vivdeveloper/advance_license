@@ -1,0 +1,49 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"2gyLRzSdZc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Advance License Account</span>\",\"col\":12}},{\"id\":\"nX63WBrZ6P\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
+ "creation": "2026-01-10 17:29:21.269247",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "support",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Advance License Account",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setup",
+   "link_count": 1,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Advance License",
+   "link_count": 0,
+   "link_to": "Advance License",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-01-10 17:30:29.797372",
+ "modified_by": "Administrator",
+ "module": "ADVANCE LICENSE",
+ "name": "Advance License Account",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 7.0,
+ "shortcuts": [],
+ "title": "Advance License Account"
+}
