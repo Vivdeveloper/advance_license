@@ -47,7 +47,10 @@ app_license = "mit"
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
-doctype_js = {"Purchase Invoice" : "advance_license/public/js/purchase_invoice.js"}
+doctype_js = {
+	"Purchase Invoice" : "advance_license/public/js/purchase_invoice.js",
+	"Sales Invoice" : "advance_license/public/js/sales_invoice.js"
+}
 
 # Svg Icons
 # ------------------
@@ -142,6 +145,10 @@ doc_events = {
 	"Purchase Invoice": {
 		"validate": "advance_license.api.validate_purchase_invoice_license",
 		"before_submit": "advance_license.api.validate_purchase_invoice_license"
+	},
+	"Sales Invoice": {
+		"validate": "advance_license.api.validate_sales_invoice_license",
+		"before_submit": "advance_license.api.validate_sales_invoice_license"
 	}
 }
 
