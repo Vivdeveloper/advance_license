@@ -116,7 +116,9 @@
   {
    "fieldname": "license_expiry_months",
    "fieldtype": "Int",
-   "label": "Licence Expiry (Months)"
+   "label": "Licence Expiry (Months)",
+   "non_negative": 1,
+   "precision": "0"
   },
   {
    "columns": 1,
@@ -175,7 +177,8 @@
    "fieldname": "import_items",
    "fieldtype": "Table",
    "label": "Item of Import",
-   "options": "Advance License Import"
+   "options": "Advance License Import",
+   "reqd": 1
   },
   {
    "fieldname": "section_break_exports",
@@ -186,7 +189,8 @@
    "fieldname": "export_items",
    "fieldtype": "Table",
    "label": "Item of Export",
-   "options": "Advance License Export"
+   "options": "Advance License Export",
+   "reqd": 1
   },
   {
    "columns": 1,
@@ -211,7 +215,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-20 07:30:48.299204",
+ "modified": "2026-01-20 07:47:09.748188",
  "modified_by": "Administrator",
  "module": "ADVANCE LICENSE",
  "name": "Advance License",

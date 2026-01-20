@@ -14,10 +14,18 @@ except Exception:  # pragma: no cover - safe fallback if erpnext isn't installed
 
 class AdvanceLicense(Document):
 	def validate(self):
+		self.validate_expiry_dates()
 		self.validate_qty_allowed()
 		self.set_expiry_dates()
 		self.set_exchange_rates()
 		self.set_local_values()
+
+	def validate_expiry_dates(self):
+		if flt(self.value_export_inr) > 0 and not self.export_expiry_date:
+			frappe.throw(_("Export Expiry Date is mandatory."))
+		
+		if flt(self.value_import_inr) > 0 and not self.import_expiry_date:
+			frappe.throw(_("Import Expiry Date is mandatory."))
 
 	def validate_qty_allowed(self):
 		if self.import_items:

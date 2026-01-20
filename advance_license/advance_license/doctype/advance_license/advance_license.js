@@ -1,18 +1,3 @@
-function set_expiry_dates(frm) {
-	if (!frm.doc.current_license_date || !frm.doc.license_expiry_months) {
-		return;
-	}
-
-	const months = cint(frm.doc.license_expiry_months);
-	if (months <= 0) {
-		return;
-	}
-
-	const expiry_date = frappe.datetime.add_months(frm.doc.current_license_date, months);
-	frm.set_value("import_expiry_date", expiry_date);
-	frm.set_value("export_expiry_date", expiry_date);
-}
-
 function get_month_diff(end_date, start_date) {
 	if (!end_date || !start_date) {
 		return 0;
@@ -29,20 +14,31 @@ function get_month_diff(end_date, start_date) {
 	return Math.max(months, 0);
 }
 
-function set_months_from_date(frm, target_date) {
-	if (!frm.doc.current_license_date || !target_date) {
+function calculate_expiry_dates_from_months(frm) {
+	if (!frm.doc.license_expiry_months) {
 		return;
 	}
 
-	const months = get_month_diff(target_date, frm.doc.current_license_date);
+	const months = cint(frm.doc.license_expiry_months);
 	if (months <= 0) {
 		return;
 	}
 
-	frm.set_value("license_expiry_months", months);
-	const expiry_date = frappe.datetime.add_months(frm.doc.current_license_date, months);
-	frm.set_value("import_expiry_date", expiry_date);
-	frm.set_value("export_expiry_date", expiry_date);
+	if (frm.doc.import_expiry_date) {
+		const export_expiry = frappe.datetime.add_months(frm.doc.import_expiry_date, months);
+		frm.set_value("export_expiry_date", export_expiry);
+	}
+}
+
+function recalculate_months_from_expiry_dates(frm) {
+	if (!frm.doc.import_expiry_date || !frm.doc.export_expiry_date) {
+		return;
+	}
+
+	const months = get_month_diff(frm.doc.export_expiry_date, frm.doc.import_expiry_date);
+	if (months > 0) {
+		frm.set_value("license_expiry_months", months);
+	}
 }
 
 function set_local_values(frm) {
@@ -111,22 +107,42 @@ function update_currency_labels(frm) {
 
 frappe.ui.form.on("Advance License", {
 	refresh(frm) {
-		set_expiry_dates(frm);
+		if (frm.doc.license_expiry_months) {
+			calculate_expiry_dates_from_months(frm);
+		}
 		set_local_values(frm);
 		update_currency_labels(frm);
 	},
 	current_license_date(frm) {
-		set_expiry_dates(frm);
+		if (frm.doc.license_expiry_months) {
+			calculate_expiry_dates_from_months(frm);
+		}
 		fetch_exchange_rates(frm);
 	},
 	license_expiry_months(frm) {
-		set_expiry_dates(frm);
+		calculate_expiry_dates_from_months(frm);
 	},
 	import_expiry_date(frm) {
-		set_months_from_date(frm, frm.doc.import_expiry_date);
+		if (frm.doc.import_expiry_date && frm.doc.export_expiry_date) {
+			recalculate_months_from_expiry_dates(frm);
+		} else if (frm.doc.import_expiry_date && frm.doc.license_expiry_months) {
+			const months = cint(frm.doc.license_expiry_months);
+			if (months > 0) {
+				const export_expiry = frappe.datetime.add_months(frm.doc.import_expiry_date, months);
+				frm.set_value("export_expiry_date", export_expiry);
+			}
+		}
 	},
 	export_expiry_date(frm) {
-		set_months_from_date(frm, frm.doc.export_expiry_date);
+		if (frm.doc.import_expiry_date && frm.doc.export_expiry_date) {
+			recalculate_months_from_expiry_dates(frm);
+		} else if (frm.doc.export_expiry_date && frm.doc.license_expiry_months) {
+			const months = cint(frm.doc.license_expiry_months);
+			if (months > 0) {
+				const import_expiry = frappe.datetime.subtract_months(frm.doc.export_expiry_date, months);
+				frm.set_value("import_expiry_date", import_expiry);
+			}
+		}
 	},
 	currency(frm) {
 		fetch_exchange_rates(frm);
