@@ -144,7 +144,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Active\nHold\nClosed"
+   "options": "Active\nHold\nClosed\nCancelled"
   },
   {
    "fieldname": "remark",
@@ -211,7 +211,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-19 06:53:00.669190",
+ "modified": "2026-01-20 07:30:48.299204",
  "modified_by": "Administrator",
  "module": "ADVANCE LICENSE",
  "name": "Advance License",
@@ -246,6 +246,10 @@
   {
    "color": "Red",
    "title": "Closed"
+  },
+  {
+   "color": "Red",
+   "title": "Cancelled"
   }
  ]
 }

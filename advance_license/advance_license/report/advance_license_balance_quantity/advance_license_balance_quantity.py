@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, getdate
 from advance_license.api import _get_license_items, _get_available_qty
 
 
@@ -28,6 +28,18 @@ def get_columns():
 			"label": _("Status"),
 			"fieldtype": "Data",
 			"width": 100
+		},
+		{
+			"fieldname": "import_expiry_date",
+			"label": _("Import Expiry Date"),
+			"fieldtype": "Date",
+			"width": 120
+		},
+		{
+			"fieldname": "export_expiry_date",
+			"label": _("Export Expiry Date"),
+			"fieldtype": "Date",
+			"width": 120
 		},
 		{
 			"fieldname": "item_type",
@@ -91,6 +103,17 @@ def get_data(filters):
 	else:
 		license_filters["status"] = "Active"
 	
+	date_range = filters.get("date_range")
+	from_date = None
+	to_date = None
+	
+	if date_range:
+		if isinstance(date_range, str):
+			date_range = frappe.parse_json(date_range)
+		if isinstance(date_range, list) and len(date_range) == 2:
+			from_date = getdate(date_range[0])
+			to_date = getdate(date_range[1])
+	
 	licenses = frappe.get_all(
 		"Advance License",
 		filters=license_filters,
@@ -107,8 +130,32 @@ def get_data(filters):
 	
 	for license_doc in licenses:
 		license_name = license_doc.name
+		import_expiry = license_doc.import_expiry_date
+		export_expiry = license_doc.export_expiry_date
 		
-		if not item_type_filter or item_type_filter == "Import":
+		if from_date and to_date:
+			show_import = False
+			show_export = False
+			
+			if not item_type_filter or item_type_filter == "Import":
+				if import_expiry:
+					import_expiry_date = getdate(import_expiry)
+					if from_date <= import_expiry_date <= to_date:
+						show_import = True
+			
+			if not item_type_filter or item_type_filter == "Export":
+				if export_expiry:
+					export_expiry_date = getdate(export_expiry)
+					if from_date <= export_expiry_date <= to_date:
+						show_export = True
+			
+			if not show_import and not show_export:
+				continue
+		else:
+			show_import = True
+			show_export = True
+		
+		if (not item_type_filter or item_type_filter == "Import") and show_import:
 			import_items = frappe.get_all(
 				"Advance License Import",
 				filters={"parent": license_name},
@@ -130,6 +177,8 @@ def get_data(filters):
 				data.append({
 					"license_number": license_doc.license_number,
 					"status": license_doc.status,
+					"import_expiry_date": import_expiry,
+					"export_expiry_date": "",
 					"item_type": "Import",
 					"item_code": item_code,
 					"item_name": item_name,
@@ -139,7 +188,7 @@ def get_data(filters):
 					"balance_qty": balance_qty
 				})
 		
-		if not item_type_filter or item_type_filter == "Export":
+		if (not item_type_filter or item_type_filter == "Export") and show_export:
 			export_items = frappe.get_all(
 				"Advance License Export",
 				filters={"parent": license_name},
@@ -161,6 +210,8 @@ def get_data(filters):
 				data.append({
 					"license_number": license_doc.license_number,
 					"status": license_doc.status,
+					"import_expiry_date": "",
+					"export_expiry_date": export_expiry,
 					"item_type": "Export",
 					"item_code": item_code,
 					"item_name": item_name,

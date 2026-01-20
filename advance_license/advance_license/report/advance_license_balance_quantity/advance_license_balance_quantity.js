@@ -37,6 +37,11 @@ frappe.query_reports["Advance License Balance Quantity"] = {
 			"get_data": function(txt) {
 				return frappe.db.get_link_options("Item", txt);
 			}
+		},
+		{
+			"fieldname": "date_range",
+			"label": __("Expiry Date Range"),
+			"fieldtype": "DateRange",
 		}
 	]
 };
