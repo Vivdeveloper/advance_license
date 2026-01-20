@@ -20,7 +20,7 @@ frappe.query_reports["Advance License Balance Quantity"] = {
 			"fieldname": "status",
 			"label": __("Status"),
 			"fieldtype": "Select",
-			"options": "\nActive\nHold\nClosed",
+			"options": "\nActive\nHold\nClosed\nCancelled",
 			"default": "Active"
 		},
 		{
