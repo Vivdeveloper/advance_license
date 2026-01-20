@@ -101,7 +101,7 @@ def _get_matching_items(license_name, item_codes, item_qty_map, item_type="impor
 		required_qty = item_qty_map.get(item_code, 0)
 		available_qty = _get_available_qty(license_name, item_code, license_items[item_code], invoice_type, exclude_doc)
 		
-		if available_qty >= required_qty:
+		if available_qty > 0:
 			matching_items.append(item_code)
 	
 	return matching_items
@@ -116,7 +116,7 @@ def _get_available_licenses(items, item_type="import", invoice_type="purchase", 
 	
 	licenses = frappe.get_all(
 		"Advance License",
-		filters={"status": "Active"},
+		filters={"status": ["in", ["Active", "Hold"]]},
 		fields=["name"]
 	)
 	
@@ -188,6 +188,10 @@ def validate_purchase_invoice_license(doc, method=None):
 	if not doc.custom_advance_license or not doc.items:
 		return
 	
+	license_status = frappe.db.get_value("Advance License", doc.custom_advance_license, "status")
+	if license_status == "Hold":
+		frappe.throw(_("Cannot use Advance License {0} with status 'Hold'.").format(doc.custom_advance_license))
+	
 	item_qty_map = {}
 	for item in doc.items:
 		if item.item_code:
@@ -219,6 +223,10 @@ def validate_sales_invoice_license(doc, method=None):
 	"""Validate Advance License qty before save/submit for Sales Invoice."""
 	if not doc.custom_advance_license or not doc.items:
 		return
+	
+	license_status = frappe.db.get_value("Advance License", doc.custom_advance_license, "status")
+	if license_status == "Hold":
+		frappe.throw(_("Cannot use Advance License {0} with status 'Hold'.").format(doc.custom_advance_license))
 	
 	item_qty_map = {}
 	for item in doc.items:
