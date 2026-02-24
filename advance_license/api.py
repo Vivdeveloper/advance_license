@@ -136,7 +136,7 @@ def _validate_license_qty(license_name, items, item_type="import", invoice_type=
 	if not license_name or not items:
 		return {"valid": True}
 	
-	_, item_qty_map = _parse_items(items)
+	item_codes, item_qty_map = _parse_items(items)
 	license_items = _get_license_items(license_name, item_type)
 	errors = []
 	
