@@ -10,16 +10,14 @@ app_license = "mit"
 
 # required_apps = []
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "advance_license",
-# 		"logo": "/assets/advance_license/logo.png",
-# 		"title": "ADVANCE LICENSE",
-# 		"route": "/advance_license",
-# 		"has_permission": "advance_license.api.permission.has_app_permission"
-# 	}
-# ]
+# Each item in the list will be shown as an app on the v16 desktop
+add_to_apps_screen = [
+	{
+		"name": "advance_license",
+		"title": "ADVANCE LICENSE",
+		"route": "/app/advance-license-account",
+	}
+]
 
 # Includes in <head>
 # ------------------

@@ -1,46 +1,3 @@
-function get_month_diff(end_date, start_date) {
-	if (!end_date || !start_date) {
-		return 0;
-	}
-
-	const start = moment(start_date);
-	const end = moment(end_date);
-	let months = end.diff(start, "months");
-
-	if (end.date() < start.date()) {
-		months -= 1;
-	}
-
-	return Math.max(months, 0);
-}
-
-function calculate_expiry_dates_from_months(frm) {
-	if (!frm.doc.license_expiry_months) {
-		return;
-	}
-
-	const months = cint(frm.doc.license_expiry_months);
-	if (months <= 0) {
-		return;
-	}
-
-	if (frm.doc.import_expiry_date) {
-		const export_expiry = frappe.datetime.add_months(frm.doc.import_expiry_date, months);
-		frm.set_value("export_expiry_date", export_expiry);
-	}
-}
-
-function recalculate_months_from_expiry_dates(frm) {
-	if (!frm.doc.import_expiry_date || !frm.doc.export_expiry_date) {
-		return;
-	}
-
-	const months = get_month_diff(frm.doc.export_expiry_date, frm.doc.import_expiry_date);
-	if (months > 0) {
-		frm.set_value("license_expiry_months", months);
-	}
-}
-
 function set_local_values(frm) {
 	const export_rate = flt(frm.doc.export_exchange_rate);
 	const import_rate = flt(frm.doc.import_exchange_rate);
@@ -95,6 +52,15 @@ function fetch_exchange_rates(frm) {
 	});
 }
 
+function set_license_expiry_months(frm) {
+	const import_expiry = frm.doc.import_expiry_date;
+	const export_expiry = frm.doc.export_expiry_date;
+	if (import_expiry && export_expiry) {
+		const months = moment(export_expiry).diff(moment(import_expiry), "months", true);
+		frm.set_value("license_expiry_months", Math.round(Math.abs(months)));
+	}
+}
+
 function update_currency_labels(frm) {
 	const fcy = frm.doc.currency || "";
 	const local = frm.doc.local_currency || "";
@@ -107,42 +73,17 @@ function update_currency_labels(frm) {
 
 frappe.ui.form.on("Advance License", {
 	refresh(frm) {
-		if (frm.doc.license_expiry_months) {
-			calculate_expiry_dates_from_months(frm);
-		}
 		set_local_values(frm);
 		update_currency_labels(frm);
 	},
 	current_license_date(frm) {
-		if (frm.doc.license_expiry_months) {
-			calculate_expiry_dates_from_months(frm);
-		}
 		fetch_exchange_rates(frm);
 	},
-	license_expiry_months(frm) {
-		calculate_expiry_dates_from_months(frm);
-	},
 	import_expiry_date(frm) {
-		if (frm.doc.import_expiry_date && frm.doc.export_expiry_date) {
-			recalculate_months_from_expiry_dates(frm);
-		} else if (frm.doc.import_expiry_date && frm.doc.license_expiry_months) {
-			const months = cint(frm.doc.license_expiry_months);
-			if (months > 0) {
-				const export_expiry = frappe.datetime.add_months(frm.doc.import_expiry_date, months);
-				frm.set_value("export_expiry_date", export_expiry);
-			}
-		}
+		set_license_expiry_months(frm);
 	},
 	export_expiry_date(frm) {
-		if (frm.doc.import_expiry_date && frm.doc.export_expiry_date) {
-			recalculate_months_from_expiry_dates(frm);
-		} else if (frm.doc.export_expiry_date && frm.doc.license_expiry_months) {
-			const months = cint(frm.doc.license_expiry_months);
-			if (months > 0) {
-				const import_expiry = frappe.datetime.subtract_months(frm.doc.export_expiry_date, months);
-				frm.set_value("import_expiry_date", import_expiry);
-			}
-		}
+		set_license_expiry_months(frm);
 	},
 	currency(frm) {
 		fetch_exchange_rates(frm);
