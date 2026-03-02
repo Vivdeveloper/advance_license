@@ -10,6 +10,15 @@ app_license = "mit"
 
 # required_apps = []
 
+# Fixtures (Custom Field etc.) - synced on migrate
+fixtures = [
+	{"doctype": "Custom Field", "filters": [["module", "=", "ADVANCE LICENSE"]]},
+	{"doctype": "Property Setter", "filters": [["module", "=", "ADVANCE LICENSE"]]},
+	{"doctype": "Client Script", "filters": [["module", "=", "ADVANCE LICENSE"]]},
+	{"doctype": "Server Script", "filters": [["module", "=", "ADVANCE LICENSE"]]},
+	{"doctype": "Print Format", "filters": [["module", "=", "ADVANCE LICENSE"]]},
+]
+
 # Each item in the list will be shown as an app on the v16 desktop
 add_to_apps_screen = [
 	{

@@ -1,6 +1,7 @@
 {
+ "app": "advance_license",
  "charts": [],
- "content": "[{\"id\":\"2gyLRzSdZc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Advance License Account</span>\",\"col\":12}},{\"id\":\"nX63WBrZ6P\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
+ "content": "[{\"id\":\"2gyLRzSdZc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Advance License Account</span>\",\"col\":12}},{\"id\":\"nX63WBrZ6P\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"HHngySbTpw\",\"type\":\"card\",\"data\":{\"card_name\":\"Report\",\"col\":4}}]",
  "creation": "2026-01-10 17:29:21.269247",
  "custom_blocks": [],
  "docstatus": 0,
@@ -31,9 +32,38 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Report",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Advance License Balance Quantity",
+   "link_count": 0,
+   "link_to": "Advance License Balance Quantity",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Advance License Voucher Wise",
+   "link_count": 0,
+   "link_to": "Advance License Voucher Wise",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-01-10 17:30:29.797372",
+ "modified": "2026-03-02 18:59:55.894186",
  "modified_by": "Administrator",
  "module": "ADVANCE LICENSE",
  "name": "Advance License Account",
@@ -45,5 +75,6 @@
  "roles": [],
  "sequence_id": 7.0,
  "shortcuts": [],
- "title": "Advance License Account"
+ "title": "Advance License Account",
+ "type": "Workspace"
 }

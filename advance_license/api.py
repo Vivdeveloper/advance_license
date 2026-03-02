@@ -60,7 +60,7 @@ def _get_available_qty(license_name, item_code, qty_allowed, invoice_type="purch
 			SELECT SUM({item_alias}.qty) as used_qty
 			FROM `{item_table}` {item_alias}
 			INNER JOIN `{invoice_table}` {invoice_alias} ON {invoice_alias}.name = {item_alias}.parent
-			WHERE {invoice_alias}.custom_advance_license = %s
+			WHERE {item_alias}.custom_advance_license = %s
 			AND {item_alias}.item_code = %s
 			AND {invoice_alias}.docstatus = 1
 			AND {invoice_alias}.name != %s
@@ -75,7 +75,7 @@ def _get_available_qty(license_name, item_code, qty_allowed, invoice_type="purch
 			SELECT SUM({item_alias}.qty) as used_qty
 			FROM `{item_table}` {item_alias}
 			INNER JOIN `{invoice_table}` {invoice_alias} ON {invoice_alias}.name = {item_alias}.parent
-			WHERE {invoice_alias}.custom_advance_license = %s
+			WHERE {item_alias}.custom_advance_license = %s
 			AND {item_alias}.item_code = %s
 			AND {invoice_alias}.docstatus = 1
 		""".format(
@@ -184,72 +184,96 @@ def validate_sales_invoice_license_qty(license_name, items, exclude_si=None):
 
 
 def validate_purchase_invoice_license(doc, method=None):
-	"""Validate Advance License qty before save/submit for Purchase Invoice."""
-	if not doc.custom_advance_license or not doc.items:
+	"""Validate Advance License qty before save/submit for Purchase Invoice (item-level license)."""
+	if not doc.items:
 		return
-	
-	license_status = frappe.db.get_value("Advance License", doc.custom_advance_license, "status")
-	if license_status == "Hold":
-		frappe.throw(_("Cannot use Advance License {0} with status 'Hold'.").format(doc.custom_advance_license))
-	
-	item_qty_map = {}
+
+	# Group by item-level custom_advance_license
+	license_item_map = {}
 	for item in doc.items:
-		if item.item_code:
-			item_qty_map[item.item_code] = item_qty_map.get(item.item_code, 0) + flt(item.qty)
-	
-	if not item_qty_map:
-		return
-	
-	license_items = _get_license_items(doc.custom_advance_license, "import")
-	
-	for item_code, required_qty in item_qty_map.items():
-		if item_code not in license_items:
-			frappe.throw(
-				_("Item {0} not found in Advance License {1}").format(item_code, doc.custom_advance_license)
-			)
-		
-		available_qty = _get_available_qty(
-			doc.custom_advance_license, item_code, license_items[item_code], "purchase", doc.name
+		if not item.item_code or not getattr(item, "custom_advance_license", None):
+			continue
+		license_name = item.custom_advance_license
+		if license_name not in license_item_map:
+			license_item_map[license_name] = {}
+		license_item_map[license_name][item.item_code] = (
+			license_item_map[license_name].get(item.item_code, 0) + flt(item.qty)
 		)
-		if available_qty < required_qty:
-			frappe.throw(
-				_("Insufficient qty for item {0}. Required: {1}, Available: {2}").format(
-					item_code, required_qty, available_qty
-				)
+
+	for license_name, item_qty_map in license_item_map.items():
+		license_status = frappe.db.get_value("Advance License", license_name, "status")
+		if license_status == "Hold":
+			frappe.msgprint(
+				_("Advance License {0} has status 'Hold'.").format(license_name),
+				indicator="orange",
+				title=_("Advance License Over Usage"),
 			)
+
+		license_items = _get_license_items(license_name, "import")
+		for item_code, required_qty in item_qty_map.items():
+			if item_code not in license_items:
+				frappe.msgprint(
+					_("Item {0} not found in Advance License {1}.").format(item_code, license_name),
+					indicator="orange",
+					title=_("Advance License Over Usage"),
+				)
+				continue
+			available_qty = _get_available_qty(
+				license_name, item_code, license_items[item_code], "purchase", doc.name
+			)
+			if available_qty < required_qty:
+				frappe.msgprint(
+					_("Insufficient qty for item {0}. Required: {1}, Available: {2}.").format(
+						item_code, required_qty, available_qty
+					),
+					indicator="orange",
+					title=_("Advance License Over Usage"),
+				)
 
 
 def validate_sales_invoice_license(doc, method=None):
-	"""Validate Advance License qty before save/submit for Sales Invoice."""
-	if not doc.custom_advance_license or not doc.items:
+	"""Validate Advance License qty before save/submit for Sales Invoice (item-level license)."""
+	if not doc.items:
 		return
-	
-	license_status = frappe.db.get_value("Advance License", doc.custom_advance_license, "status")
-	if license_status == "Hold":
-		frappe.throw(_("Cannot use Advance License {0} with status 'Hold'.").format(doc.custom_advance_license))
-	
-	item_qty_map = {}
+
+	# Group by item-level custom_advance_license
+	license_item_map = {}
 	for item in doc.items:
-		if item.item_code:
-			item_qty_map[item.item_code] = item_qty_map.get(item.item_code, 0) + flt(item.qty)
-	
-	if not item_qty_map:
-		return
-	
-	license_items = _get_license_items(doc.custom_advance_license, "export")
-	
-	for item_code, required_qty in item_qty_map.items():
-		if item_code not in license_items:
-			frappe.throw(
-				_("Item {0} not found in Advance License {1}").format(item_code, doc.custom_advance_license)
-			)
-		
-		available_qty = _get_available_qty(
-			doc.custom_advance_license, item_code, license_items[item_code], "sales", doc.name
+		if not item.item_code or not getattr(item, "custom_advance_license", None):
+			continue
+		license_name = item.custom_advance_license
+		if license_name not in license_item_map:
+			license_item_map[license_name] = {}
+		license_item_map[license_name][item.item_code] = (
+			license_item_map[license_name].get(item.item_code, 0) + flt(item.qty)
 		)
-		if available_qty < required_qty:
-			frappe.throw(
-				_("Insufficient qty for item {0}. Required: {1}, Available: {2}").format(
-					item_code, required_qty, available_qty
-				)
+
+	for license_name, item_qty_map in license_item_map.items():
+		license_status = frappe.db.get_value("Advance License", license_name, "status")
+		if license_status == "Hold":
+			frappe.msgprint(
+				_("Advance License {0} has status 'Hold'.").format(license_name),
+				indicator="orange",
+				title=_("Advance License Hold"),
 			)
+
+		license_items = _get_license_items(license_name, "export")
+		for item_code, required_qty in item_qty_map.items():
+			if item_code not in license_items:
+				frappe.msgprint(
+					_("Item {0} not found in Advance License {1}.").format(item_code, license_name),
+					indicator="orange",
+					title=_("Advance License"),
+				)
+				continue
+			available_qty = _get_available_qty(
+				license_name, item_code, license_items[item_code], "sales", doc.name
+			)
+			if available_qty < required_qty:
+				frappe.msgprint(
+					_("Insufficient qty for item {0}. Required: {1}, Available: {2}.").format(
+						item_code, required_qty, available_qty
+					),
+					indicator="orange",
+					title=_("Advance License Over Usage"),
+				)

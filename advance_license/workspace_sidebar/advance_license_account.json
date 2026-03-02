@@ -1,0 +1,53 @@
+{
+ "app": "advance_license",
+ "creation": "2026-02-25 01:25:31.680461",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "support",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "mouse-pointer-click",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Home",
+   "link_to": "Advance License Account",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "activity",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Advance License Balance Quantity",
+   "link_to": "Advance License Balance Quantity",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "align-center-vertical",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Advance License Voucher Wise",
+   "link_to": "Advance License Voucher Wise",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-03-02 19:00:39.270890",
+ "modified_by": "Administrator",
+ "module": "ADVANCE LICENSE",
+ "name": "Advance License Account",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Advance License Account"
+}
