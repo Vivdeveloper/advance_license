@@ -10,7 +10,7 @@ app_license = "mit"
 
 # required_apps = []
 
-# Fixtures (Custom Field etc.) - synced on migrate
+# Fixtures imported from `fixtures/*.json` during `bench migrate` (standard Frappe; not exported by app code).
 fixtures = [
 	{"doctype": "Custom Field", "filters": [["module", "=", "ADVANCE LICENSE"]]},
 	{"doctype": "Property Setter", "filters": [["module", "=", "ADVANCE LICENSE"]]},
@@ -147,16 +147,27 @@ doctype_js = {
 # Document Events
 # ---------------
 # Hook on document methods and events
+#
+# Draft save: `validate` (+ `before_save` inside Frappe).
+# First submit: `validate`, then `before_submit` (doc still draft).
+# Update after submit (“Save” on submitted doc): only `before_update_after_submit` runs from
+# doc_events — `validate` / `before_submit` are not called on that path, so we hook it explicitly.
+# There is no `before_submitted` event; use `before_submit` for pre-submit checks.
 
 doc_events = {
 	"Purchase Invoice": {
 		"validate": "advance_license.api.validate_purchase_invoice_license",
-		"before_submit": "advance_license.api.validate_purchase_invoice_license"
+		"before_submit": "advance_license.api.validate_purchase_invoice_license",
+		"before_update_after_submit": "advance_license.api.validate_purchase_invoice_license",
 	},
 	"Sales Invoice": {
 		"validate": "advance_license.api.validate_sales_invoice_license",
-		"before_submit": "advance_license.api.validate_sales_invoice_license"
-	}
+		"before_submit": "advance_license.api.validate_sales_invoice_license",
+		"before_update_after_submit": "advance_license.api.validate_sales_invoice_license",
+	},
+	"Custom Field": {
+		"before_save": "advance_license.fixture_auto_export.schedule_custom_field_fixture_export",
+	},
 }
 
 # Scheduled Tasks

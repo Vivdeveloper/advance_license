@@ -35,9 +35,18 @@ frappe.ui.form.on("Sales Invoice Item", {
 	}
 });
 
+function _advance_license_row_key(locals, cdt, cdn) {
+	const row = locals[cdt][cdn];
+	if (!row) {
+		return cdn;
+	}
+	return row.name || "idx:" + (row.idx || 0);
+}
+
 function _setup_advance_license_query(frm) {
 	frm.set_query("custom_advance_license", "items", function(doc, cdt, cdn) {
-		const licenses = frm._row_licenses && frm._row_licenses[cdn];
+		const key = _advance_license_row_key(locals, cdt, cdn);
+		const licenses = frm._row_licenses && frm._row_licenses[key];
 		if (!licenses || licenses.length === 0) {
 			return { filters: { name: "" } };
 		}
@@ -59,34 +68,28 @@ function _refresh_row_licenses(frm) {
 		frm._row_licenses = {};
 		return;
 	}
-	if (!frm._row_licenses) frm._row_licenses = {};
 
-	const pending = [];
-	frm.doc.items.forEach(function(row) {
-		if (!row.item_code) return;
-		const cdn = row.name || "Sales Invoice Item-" + row.idx;
-		const items_arg = [{ item_code: row.item_code, qty: parseFloat(row.qty) || 0 }];
-		pending.push({
-			cdn: cdn,
-			items: items_arg
-		});
+	const payload = frm.doc.items.map(function(row) {
+		return {
+			name: row.name,
+			idx: row.idx,
+			item_code: row.item_code,
+			qty: parseFloat(row.qty) || 0,
+			custom_advance_license: row.custom_advance_license || "",
+			custom_advance_license_qty: parseFloat(row.custom_advance_license_qty) || 0
+		};
 	});
 
-	if (pending.length === 0) return;
-
-	pending.forEach(function(p) {
-		frappe.call({
-			method: "advance_license.api.get_available_licenses_for_sales",
-			args: {
-				items: p.items,
-				exclude_si: frm.doc.name || null
-			},
-			callback: function(r) {
-				const list = (r.message && r.message.length) ? r.message : [];
-				frm._row_licenses[p.cdn] = list;
-				frm.refresh_field("items");
-			}
-		});
+	frappe.call({
+		method: "advance_license.api.get_available_licenses_for_sales_batch",
+		args: {
+			items: payload,
+			exclude_si: frm.doc.name || null
+		},
+		callback: function(r) {
+			frm._row_licenses = r.message || {};
+			frm.refresh_field("items");
+		}
 	});
 }
 
@@ -100,7 +103,10 @@ function _validate_license_qty(frm, throw_error) {
 		if (!row.item_code || !row.custom_advance_license) return;
 		const lic = row.custom_advance_license;
 		if (!by_license[lic]) by_license[lic] = [];
-		by_license[lic].push({ item_code: row.item_code, qty: row.qty || 0 });
+		by_license[lic].push({
+			item_code: row.item_code,
+			custom_advance_license_qty: parseFloat(row.custom_advance_license_qty) || 0
+		});
 	});
 
 	const licenses = Object.keys(by_license);

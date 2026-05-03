@@ -1,5 +1,8 @@
 # Copyright (c) 2026, Viv Choudhary and contributors
 # For license information, please see license.txt
+#
+# Line quantities are Purchase/Sales Invoice Item.custom_advance_license_qty only —
+# not the invoice line stock qty (qty).
 
 import frappe
 from frappe import _
@@ -74,16 +77,16 @@ def get_columns():
 		},
 		{
 			"fieldname": "qty_allowed",
-			"label": _("Allowed on License"),
+			"label": _("License Qty Allowed"),
 			"fieldtype": "Float",
-			"width": 130,
+			"width": 150,
 			"precision": 2,
 		},
 		{
-			"fieldname": "qty",
-			"label": _("Qty on Voucher"),
+			"fieldname": "advance_license_qty",
+			"label": _("Advance License Qty (invoice line)"),
 			"fieldtype": "Float",
-			"width": 120,
+			"width": 200,
 			"precision": 2,
 		},
 		{
@@ -184,7 +187,7 @@ def _get_purchase_invoice_rows(from_date, to_date, advance_license, item_code, l
 			pi_item.custom_advance_license as advance_license,
 			pi_item.item_code,
 			pi_item.item_name,
-			pi_item.qty,
+			COALESCE(pi_item.custom_advance_license_qty, 0) as advance_license_qty,
 			pi_item.stock_uom as uom,
 			ali.qty_allowed
 		FROM `tabPurchase Invoice Item` pi_item
@@ -212,7 +215,7 @@ def _get_purchase_invoice_rows(from_date, to_date, advance_license, item_code, l
 				"qty_allowed": flt(r.qty_allowed),
 				"item_code": r.item_code,
 				"item_name": r.item_name or "",
-				"qty": flt(r.qty),
+				"advance_license_qty": flt(r.advance_license_qty),
 				"uom": r.uom or "",
 			}
 		)
@@ -247,7 +250,7 @@ def _get_sales_invoice_rows(from_date, to_date, advance_license, item_code, lice
 			si_item.custom_advance_license as advance_license,
 			si_item.item_code,
 			si_item.item_name,
-			si_item.qty,
+			COALESCE(si_item.custom_advance_license_qty, 0) as advance_license_qty,
 			si_item.stock_uom as uom,
 			ale.qty_allowed
 		FROM `tabSales Invoice Item` si_item
@@ -275,7 +278,7 @@ def _get_sales_invoice_rows(from_date, to_date, advance_license, item_code, lice
 				"qty_allowed": flt(r.qty_allowed),
 				"item_code": r.item_code,
 				"item_name": r.item_name or "",
-				"qty": flt(r.qty),
+				"advance_license_qty": flt(r.advance_license_qty),
 				"uom": r.uom or "",
 			}
 		)
@@ -300,7 +303,7 @@ def _get_license_meta(license_names):
 def _set_line_note(row):
 	"""One short note per line: only when something is wrong (keeps the grid easy to read)."""
 	allowed = flt(row.get("qty_allowed"))
-	line_qty = flt(row.get("qty"))
+	line_qty = flt(row.get("advance_license_qty"))
 	if allowed <= 0 and line_qty > 0:
 		row["note"] = _("No allowance for this item on the license")
 	elif line_qty > allowed:
@@ -324,7 +327,7 @@ def _make_subtotal_row(advance_license_name, rows):
 		"qty_allowed": "",
 		"item_code": "",
 		"item_name": "",
-		"qty": flt(sum(r.get("qty") for r in rows)),
+		"advance_license_qty": flt(sum(r.get("advance_license_qty") for r in rows)),
 		"note": _("See Notes on lines above") if any((r.get("note") or "").strip() for r in rows) else "",
 		"uom": "",
 	}
@@ -342,7 +345,7 @@ def _make_total_row(rows):
 		"qty_allowed": "",
 		"item_code": "",
 		"item_name": "",
-		"qty": flt(sum(r.get("qty") for r in rows)),
+		"advance_license_qty": flt(sum(r.get("advance_license_qty") for r in rows)),
 		"note": _("See Notes on lines above") if any((r.get("note") or "").strip() for r in rows) else "",
 		"uom": "",
 	}

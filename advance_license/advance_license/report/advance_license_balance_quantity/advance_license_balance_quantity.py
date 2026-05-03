@@ -7,6 +7,10 @@ from frappe.utils import flt, getdate
 from advance_license.api import _get_available_qty
 
 
+# Consumption/balance uses SUM of Purchase/Sales Invoice Item.custom_advance_license_qty
+# on submitted documents — not stock qty (qty) on the invoice line.
+
+
 def execute(filters=None):
 	columns = get_columns()
 	data = get_data(filters)
@@ -75,23 +79,23 @@ def get_columns():
 		},
 		{
 			"fieldname": "consumed_invoiced_qty",
-			"label": _("Consumed Qty (Invoices)"),
+			"label": _("Consumed Advance License Qty (Invoices)"),
 			"fieldtype": "Float",
-			"width": 150,
+			"width": 220,
 			"precision": 2,
 		},
 		{
 			"fieldname": "balance_qty",
-			"label": _("Balance (Allowed − Invoiced)"),
+			"label": _("Balance (Allowed − Advance License Qty Invoiced)"),
 			"fieldtype": "Float",
-			"width": 160,
+			"width": 230,
 			"precision": 2,
 		},
 		{
 			"fieldname": "exceeded_qty",
-			"label": _("Over License By"),
+			"label": _("Over License By (Advance License Qty)"),
 			"fieldtype": "Float",
-			"width": 140,
+			"width": 200,
 			"precision": 2,
 		},
 		{
