@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, getdate
+from frappe.utils import flt
 
 
 def execute(filters=None):
@@ -45,6 +45,12 @@ def get_columns():
 			"fieldtype": "Data",
 			"width": 120,
 		},
+		{
+			"fieldname": "license_status",
+			"label": _("License Status"),
+			"fieldtype": "Data",
+			"width": 100,
+		},
 
 		{
 			"fieldname": "item_code",
@@ -59,26 +65,32 @@ def get_columns():
 			"fieldtype": "Data",
 			"width": 200,
 		},
-				{
-			"fieldname": "qty_allowed",
-			"label": _("Qty Allowed"),
-			"fieldtype": "Float",
-			"width": 100,
-			"precision": 2,
-		},
-		{
-			"fieldname": "qty",
-			"label": _("Qty"),
-			"fieldtype": "Float",
-			"width": 100,
-			"precision": 2,
-		},
 		{
 			"fieldname": "uom",
 			"label": _("UOM"),
 			"fieldtype": "Link",
 			"options": "UOM",
 			"width": 80,
+		},
+		{
+			"fieldname": "qty_allowed",
+			"label": _("Allowed on License"),
+			"fieldtype": "Float",
+			"width": 130,
+			"precision": 2,
+		},
+		{
+			"fieldname": "qty",
+			"label": _("Qty on Voucher"),
+			"fieldtype": "Float",
+			"width": 120,
+			"precision": 2,
+		},
+		{
+			"fieldname": "note",
+			"label": _("Note"),
+			"fieldtype": "Data",
+			"width": 220,
 		},
 	]
 
@@ -88,25 +100,31 @@ def get_data(filters):
 	from_date = filters.get("from_date")
 	to_date = filters.get("to_date")
 	advance_license = filters.get("advance_license")
+	license_status = filters.get("license_status")
 	voucher_type = filters.get("voucher_type")
 	item_code = filters.get("item_code")
 
 	if not voucher_type or voucher_type == "Purchase Invoice":
 		data.extend(
-			_get_purchase_invoice_rows(from_date, to_date, advance_license, item_code)
+			_get_purchase_invoice_rows(from_date, to_date, advance_license, item_code, license_status)
 		)
 	if not voucher_type or voucher_type == "Sales Invoice":
 		data.extend(
-			_get_sales_invoice_rows(from_date, to_date, advance_license, item_code)
+			_get_sales_invoice_rows(from_date, to_date, advance_license, item_code, license_status)
 		)
 
-	# Group by Advance License (name), then by posting_date, voucher
-	data.sort(key=lambda r: (
-		r.get("advance_license") or "",
-		r.get("posting_date") or "",
-		r.get("voucher_type") or "",
-		r.get("voucher_no") or "",
-	))
+	data.sort(
+		key=lambda r: (
+			r.get("advance_license") or "",
+			r.get("posting_date") or "",
+			r.get("voucher_type") or "",
+			r.get("voucher_no") or "",
+			r.get("item_code") or "",
+		)
+	)
+
+	for row in data:
+		_set_line_note(row)
 
 	# Build output with subtotal per license and grand total
 	out = []
@@ -138,9 +156,14 @@ def get_data(filters):
 	return out
 
 
-def _get_purchase_invoice_rows(from_date, to_date, advance_license, item_code):
+def _get_purchase_invoice_rows(from_date, to_date, advance_license, item_code, license_status=None):
 	conditions = ["pi_item.custom_advance_license IS NOT NULL", "pi_item.custom_advance_license != ''", "pi.docstatus = 1"]
 	values = []
+	license_join = ""
+	if license_status:
+		license_join = "INNER JOIN `tabAdvance License` al_pi ON al_pi.name = pi_item.custom_advance_license"
+		conditions.append("al_pi.status = %s")
+		values.append(license_status)
 	if from_date:
 		conditions.append("pi.posting_date >= %s")
 		values.append(from_date)
@@ -166,33 +189,44 @@ def _get_purchase_invoice_rows(from_date, to_date, advance_license, item_code):
 			ali.qty_allowed
 		FROM `tabPurchase Invoice Item` pi_item
 		INNER JOIN `tabPurchase Invoice` pi ON pi.name = pi_item.parent
+		{license_join}
 		LEFT JOIN `tabAdvance License Import` ali ON ali.parent = pi_item.custom_advance_license AND ali.item_of_import = pi_item.item_code
 		WHERE {conditions}
 		ORDER BY pi.posting_date, pi.name
-	""".format(conditions=" AND ".join(conditions)), values, as_dict=True)
+	""".format(license_join=license_join, conditions=" AND ".join(conditions)), values, as_dict=True)
 
-	license_numbers = _get_license_numbers([r.advance_license for r in rows if r.advance_license])
+	license_numbers, license_statuses = _get_license_meta(
+		[r.advance_license for r in rows if r.advance_license]
+	)
 
 	out = []
 	for r in rows:
-		out.append({
-			"voucher_type": "Purchase Invoice",
-			"voucher_no": r.voucher_no,
-			"posting_date": r.posting_date,
-			"advance_license": r.advance_license,
-			"license_number": license_numbers.get(r.advance_license, ""),
-			"qty_allowed": flt(r.qty_allowed),
-			"item_code": r.item_code,
-			"item_name": r.item_name or "",
-			"qty": flt(r.qty),
-			"uom": r.uom or "",
-		})
+		out.append(
+			{
+				"voucher_type": "Purchase Invoice",
+				"voucher_no": r.voucher_no,
+				"posting_date": r.posting_date,
+				"advance_license": r.advance_license,
+				"license_number": license_numbers.get(r.advance_license, ""),
+				"license_status": license_statuses.get(r.advance_license, ""),
+				"qty_allowed": flt(r.qty_allowed),
+				"item_code": r.item_code,
+				"item_name": r.item_name or "",
+				"qty": flt(r.qty),
+				"uom": r.uom or "",
+			}
+		)
 	return out
 
 
-def _get_sales_invoice_rows(from_date, to_date, advance_license, item_code):
+def _get_sales_invoice_rows(from_date, to_date, advance_license, item_code, license_status=None):
 	conditions = ["si_item.custom_advance_license IS NOT NULL", "si_item.custom_advance_license != ''", "si.docstatus = 1"]
 	values = []
+	license_join = ""
+	if license_status:
+		license_join = "INNER JOIN `tabAdvance License` al_si ON al_si.name = si_item.custom_advance_license"
+		conditions.append("al_si.status = %s")
+		values.append(license_status)
 	if from_date:
 		conditions.append("si.posting_date >= %s")
 		values.append(from_date)
@@ -218,54 +252,80 @@ def _get_sales_invoice_rows(from_date, to_date, advance_license, item_code):
 			ale.qty_allowed
 		FROM `tabSales Invoice Item` si_item
 		INNER JOIN `tabSales Invoice` si ON si.name = si_item.parent
+		{license_join}
 		LEFT JOIN `tabAdvance License Export` ale ON ale.parent = si_item.custom_advance_license AND ale.item_of_export = si_item.item_code
 		WHERE {conditions}
 		ORDER BY si.posting_date, si.name
-	""".format(conditions=" AND ".join(conditions)), values, as_dict=True)
+	""".format(license_join=license_join, conditions=" AND ".join(conditions)), values, as_dict=True)
 
-	license_numbers = _get_license_numbers([r.advance_license for r in rows if r.advance_license])
+	license_numbers, license_statuses = _get_license_meta(
+		[r.advance_license for r in rows if r.advance_license]
+	)
 
 	out = []
 	for r in rows:
-		out.append({
-			"voucher_type": "Sales Invoice",
-			"voucher_no": r.voucher_no,
-			"posting_date": r.posting_date,
-			"advance_license": r.advance_license,
-			"license_number": license_numbers.get(r.advance_license, ""),
-			"qty_allowed": flt(r.qty_allowed),
-			"item_code": r.item_code,
-			"item_name": r.item_name or "",
-			"qty": flt(r.qty),
-			"uom": r.uom or "",
-		})
+		out.append(
+			{
+				"voucher_type": "Sales Invoice",
+				"voucher_no": r.voucher_no,
+				"posting_date": r.posting_date,
+				"advance_license": r.advance_license,
+				"license_number": license_numbers.get(r.advance_license, ""),
+				"license_status": license_statuses.get(r.advance_license, ""),
+				"qty_allowed": flt(r.qty_allowed),
+				"item_code": r.item_code,
+				"item_name": r.item_name or "",
+				"qty": flt(r.qty),
+				"uom": r.uom or "",
+			}
+		)
 	return out
 
 
-def _get_license_numbers(license_names):
+def _get_license_meta(license_names):
+	"""Advance License doc `license_number` (display id) and `status` per name."""
 	if not license_names:
-		return {}
+		return {}, {}
+	unique = list({name for name in license_names if name})
 	licenses = frappe.get_all(
 		"Advance License",
-		filters={"name": ["in", list(set(license_names))]},
-		fields=["name", "license_number"],
+		filters={"name": ["in", unique]},
+		fields=["name", "license_number", "status"],
 	)
-	return {d.name: d.license_number or d.name for d in licenses}
+	numbers = {d.name: d.license_number or d.name for d in licenses}
+	statuses = {d.name: d.status or "" for d in licenses}
+	return numbers, statuses
+
+
+def _set_line_note(row):
+	"""One short note per line: only when something is wrong (keeps the grid easy to read)."""
+	allowed = flt(row.get("qty_allowed"))
+	line_qty = flt(row.get("qty"))
+	if allowed <= 0 and line_qty > 0:
+		row["note"] = _("No allowance for this item on the license")
+	elif line_qty > allowed:
+		over = flt(line_qty - allowed)
+		row["note"] = _("This voucher is {0} over the allowed qty").format(over)
+	else:
+		row["note"] = ""
 
 
 def _make_subtotal_row(advance_license_name, rows):
 	"""Subtotal row for one Advance License group."""
 	license_number = rows[0].get("license_number", "") if rows else ""
+	al_status = rows[0].get("license_status", "") if rows else ""
 	return {
 		"voucher_type": "",
 		"voucher_no": _("Total ({0})").format(license_number or advance_license_name),
 		"posting_date": "",
 		"advance_license": advance_license_name,
 		"license_number": license_number,
+		"license_status": al_status,
 		"qty_allowed": "",
 		"item_code": "",
 		"item_name": "",
 		"qty": flt(sum(r.get("qty") for r in rows)),
+		"note": _("See Notes on lines above") if any((r.get("note") or "").strip() for r in rows) else "",
 		"uom": "",
 	}
 
@@ -278,9 +338,11 @@ def _make_total_row(rows):
 		"posting_date": "",
 		"advance_license": "",
 		"license_number": "",
+		"license_status": "",
 		"qty_allowed": "",
 		"item_code": "",
 		"item_name": "",
 		"qty": flt(sum(r.get("qty") for r in rows)),
+		"note": _("See Notes on lines above") if any((r.get("note") or "").strip() for r in rows) else "",
 		"uom": "",
 	}

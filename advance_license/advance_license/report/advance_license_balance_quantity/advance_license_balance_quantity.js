@@ -9,16 +9,18 @@ frappe.query_reports["Advance License Balance Quantity"] = {
 			"fieldtype": "Link",
 			"options": "Advance License",
 			"get_query": function() {
-				return {
-					"filters": {
-						"status": "Active"
-					}
-				};
-			}
+				const status = frappe.query_report.get_filter_value("status");
+				if (status) {
+					return {
+						filters: { status: status },
+					};
+				}
+				return {};
+			},
 		},
 		{
 			"fieldname": "status",
-			"label": __("Status"),
+			"label": __("License Status"),
 			"fieldtype": "Select",
 			"options": "\nActive\nHold\nClosed\nCancelled",
 			"default": "Active"

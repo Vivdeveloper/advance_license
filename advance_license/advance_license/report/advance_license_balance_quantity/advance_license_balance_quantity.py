@@ -24,7 +24,7 @@ def get_columns():
 		},
 		{
 			"fieldname": "status",
-			"label": _("Status"),
+			"label": _("License Status"),
 			"fieldtype": "Data",
 			"width": 100,
 		},
@@ -68,24 +68,37 @@ def get_columns():
 		},
 		{
 			"fieldname": "qty_allowed",
-			"label": _("Qty Allowed"),
+			"label": _("License Qty Allowed"),
 			"fieldtype": "Float",
-			"width": 120,
+			"width": 130,
 			"precision": 2,
 		},
 		{
-			"fieldname": "used_qty",
-			"label": _("Used Qty"),
+			"fieldname": "consumed_invoiced_qty",
+			"label": _("Consumed Qty (Invoices)"),
 			"fieldtype": "Float",
-			"width": 120,
+			"width": 150,
 			"precision": 2,
 		},
 		{
 			"fieldname": "balance_qty",
-			"label": _("Balance Qty"),
+			"label": _("Balance (Allowed − Invoiced)"),
 			"fieldtype": "Float",
-			"width": 120,
+			"width": 160,
 			"precision": 2,
+		},
+		{
+			"fieldname": "exceeded_qty",
+			"label": _("Over License By"),
+			"fieldtype": "Float",
+			"width": 140,
+			"precision": 2,
+		},
+		{
+			"fieldname": "limit_status",
+			"label": _("Limit Status"),
+			"fieldtype": "Data",
+			"width": 120,
 		},
 	]
 
@@ -127,14 +140,14 @@ def get_data(filters):
 					continue
 				all_item_codes.append(item_code)
 				qty_allowed = flt(item.qty_allowed)
-				available = _get_available_qty(license_doc.name, item_code, qty_allowed, "purchase")
-				used_qty = qty_allowed - available
+				balance_qty = _get_available_qty(license_doc.name, item_code, qty_allowed, "purchase")
+				consumed = qty_allowed - balance_qty
 				row = _make_row(
 					license_doc,
 					item_code,
 					qty_allowed,
-					used_qty,
-					available,
+					consumed,
+					balance_qty,
 					"Import",
 					uom=item.uom,
 					import_expiry=license_doc.import_expiry_date,
@@ -154,14 +167,14 @@ def get_data(filters):
 					continue
 				all_item_codes.append(item_code)
 				qty_allowed = flt(item.qty_allowed)
-				available = _get_available_qty(license_doc.name, item_code, qty_allowed, "sales")
-				used_qty = qty_allowed - available
+				balance_qty = _get_available_qty(license_doc.name, item_code, qty_allowed, "sales")
+				consumed = qty_allowed - balance_qty
 				row = _make_row(
 					license_doc,
 					item_code,
 					qty_allowed,
-					used_qty,
-					available,
+					consumed,
+					balance_qty,
 					"Export",
 					uom=item.uom,
 					import_expiry=None,
@@ -190,7 +203,9 @@ def _build_license_filters(filters):
 	license_filters = {}
 	if filters.get("advance_license"):
 		license_filters["name"] = filters.get("advance_license")
-	license_filters["status"] = filters.get("status") or "Active"
+	status = filters.get("status")
+	if status:
+		license_filters["status"] = status
 	return license_filters
 
 
@@ -243,13 +258,23 @@ def _make_row(
 	license_doc,
 	item_code,
 	qty_allowed,
-	used_qty,
+	consumed_invoiced_qty,
 	balance_qty,
 	item_type,
 	uom=None,
 	import_expiry=None,
 	export_expiry=None,
 ):
+	consumed = flt(consumed_invoiced_qty)
+	allowed = flt(qty_allowed)
+	exceeded = max(0.0, consumed - allowed)
+	if consumed > allowed:
+		limit_status = _("Over limit")
+	elif consumed <= 0:
+		limit_status = _("Unused")
+	else:
+		limit_status = _("Within limit")
+
 	return {
 		"license_number": license_doc.license_number or license_doc.name,
 		"status": license_doc.status,
@@ -259,9 +284,11 @@ def _make_row(
 		"item_code": item_code,
 		"item_name": "",  # filled later in batch
 		"uom": uom or "",
-		"qty_allowed": qty_allowed,
-		"used_qty": used_qty,
-		"balance_qty": balance_qty,
+		"qty_allowed": allowed,
+		"consumed_invoiced_qty": consumed,
+		"balance_qty": flt(balance_qty),
+		"exceeded_qty": exceeded,
+		"limit_status": limit_status,
 	}
 
 
@@ -269,7 +296,7 @@ def _make_subtotal_row(license_doc, rows):
 	"""Subtotal row for one license group."""
 	return {
 		"license_number": _("Total ({0})").format(license_doc.license_number or license_doc.name),
-		"status": "",
+		"status": license_doc.status or "",
 		"import_expiry_date": "",
 		"export_expiry_date": "",
 		"item_type": "",
@@ -277,8 +304,10 @@ def _make_subtotal_row(license_doc, rows):
 		"item_name": "",
 		"uom": "",
 		"qty_allowed": flt(sum(r.get("qty_allowed") for r in rows)),
-		"used_qty": flt(sum(r.get("used_qty") for r in rows)),
+		"consumed_invoiced_qty": flt(sum(r.get("consumed_invoiced_qty") for r in rows)),
 		"balance_qty": flt(sum(r.get("balance_qty") for r in rows)),
+		"exceeded_qty": flt(sum(r.get("exceeded_qty") for r in rows)),
+		"limit_status": (_("Has overrun") if any(flt(r.get("exceeded_qty")) > 0 for r in rows) else ""),
 	}
 
 
@@ -294,7 +323,9 @@ def _make_total_row(rows):
 		"item_name": "",
 		"uom": "",
 		"qty_allowed": flt(sum(r.get("qty_allowed") for r in rows)),
-		"used_qty": flt(sum(r.get("used_qty") for r in rows)),
+		"consumed_invoiced_qty": flt(sum(r.get("consumed_invoiced_qty") for r in rows)),
 		"balance_qty": flt(sum(r.get("balance_qty") for r in rows)),
+		"exceeded_qty": flt(sum(r.get("exceeded_qty") for r in rows)),
+		"limit_status": (_("Has overrun") if any(flt(r.get("exceeded_qty")) > 0 for r in rows) else ""),
 	}
 

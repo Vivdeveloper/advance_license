@@ -18,6 +18,22 @@ frappe.query_reports["Advance License Voucher Wise"] = {
 			"label": __("Advance License"),
 			"fieldtype": "Link",
 			"options": "Advance License",
+			"get_query": function() {
+				const status = frappe.query_report.get_filter_value("license_status");
+				if (status) {
+					return {
+						filters: { status: status },
+					};
+				}
+				return {};
+			},
+		},
+		{
+			"fieldname": "license_status",
+			"label": __("License Status"),
+			"fieldtype": "Select",
+			"options": "\nActive\nHold\nClosed\nCancelled",
+			"default": ""
 		},
 		{
 			"fieldname": "voucher_type",
