@@ -1,11 +1,9 @@
 frappe.ui.form.on("Sales Invoice", {
 	refresh(frm) {
-		_toggle_advance_license_column(frm);
 		_setup_advance_license_query(frm);
 		_refresh_row_licenses(frm);
 	},
 	customer(frm) {
-		_toggle_advance_license_column(frm);
 		_refresh_row_licenses(frm);
 	},
 	items_add(frm) {
@@ -36,25 +34,6 @@ frappe.ui.form.on("Sales Invoice Item", {
 		_validate_license_qty(frm, false);
 	}
 });
-
-function _toggle_advance_license_column(frm) {
-	const grid = frm.fields_dict.items && frm.fields_dict.items.grid;
-	if (!grid) return;
-
-	frappe.db.get_value("Customer", frm.doc.customer, "custom_advance_license_applicable", function(r) {
-		if (frm.doc.customer && r && r.custom_advance_license_applicable === "Yes") {
-			grid.update_docfield_property("custom_advance_license", "hidden", 0);
-		} else {
-			grid.update_docfield_property("custom_advance_license", "hidden", 1);
-			if (frm.doc.items) {
-				frm.doc.items.forEach(function(row) {
-					if (row.custom_advance_license) row.custom_advance_license = "";
-				});
-				frm.refresh_field("items");
-			}
-		}
-	});
-}
 
 function _setup_advance_license_query(frm) {
 	frm.set_query("custom_advance_license", "items", function(doc, cdt, cdn) {

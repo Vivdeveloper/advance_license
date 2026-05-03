@@ -21,6 +21,18 @@
   {
    "child": 0,
    "collapsible": 1,
+   "icon": "badge-dollar-sign",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Advance License",
+   "link_to": "Advance License",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
    "icon": "activity",
    "indent": 0,
    "keep_closed": 0,
@@ -43,7 +55,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-03-02 19:00:39.270890",
+ "modified": "2026-05-03 20:23:57.486622",
  "modified_by": "Administrator",
  "module": "ADVANCE LICENSE",
  "name": "Advance License Account",
